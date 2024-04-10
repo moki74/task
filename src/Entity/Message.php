@@ -5,35 +5,38 @@ namespace App\Entity;
 use App\Repository\MessageRepository;
 use DateTime;
 use Doctrine\DBAL\Types\Types;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\HasLifecycleCallbacks;
 
 #[ORM\Entity(repositoryClass: MessageRepository::class)]
 /**
  * TODO: Review Message class
  */
+
+#[HasLifecycleCallbacks]
 class Message
 {
+    const STATUS_SENT = 'sent';
+    const STATUS_READ = 'read';
+
+    // We don't need two primary keys, we should use one and make it not nullable
+
+    #[Groups(['list'])]
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
-
     #[ORM\Column(type: Types::GUID)]
-    private ?string $uuid = null;
+    private string $uuid;
 
+    #[Groups(['list'])]
     #[ORM\Column(length: 255)]
     private ?string $text = null;
 
+    #[Groups(['list'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $status = null;
-    
+
     #[ORM\Column(type: 'datetime')]
     private DateTime $createdAt;
-
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
 
     public function getUuid(): ?string
     {
@@ -76,10 +79,10 @@ class Message
         return $this->createdAt;
     }
 
-    public function setCreatedAt(DateTime $createdAt): static
+    // make createdAt property automatically set on insert
+    #[ORM\PrePersist]
+    public function setCreatedAtValue(): void
     {
-        $this->createdAt = $createdAt;
-        
-        return $this;
+        $this->createdAt = new \DateTime();
     }
 }
